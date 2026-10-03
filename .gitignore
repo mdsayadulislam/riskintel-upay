@@ -1,7 +1,10 @@
-node_modules/ 
-frontend/node_modules/ 
-backend/venv/ 
-.next/ 
-frontend/.next/ 
-__pycache__/ 
-*.pyc 
+node_modules/
+frontend/node_modules/
+backend/venv/
+.next/
+frontend/.next/
+__pycache__/
+backend/__pycache__/
+*.pyc
+*.tsbuildinfo
+.DS_Store

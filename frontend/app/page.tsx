@@ -490,6 +490,7 @@ export default function RiskIntelUpayDashboard() {
   const [recovering, setRecovering] = useState<boolean>(false);
   const [recoverySuccess, setRecoverySuccess] = useState<boolean>(false);
 
+  // Dynamic API configuration with fallback for production deployments
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
   const API_ASSESS_URL = `${API_BASE}/api/v1/assess-risk`;
   const API_HEALTH_URL = `${API_BASE}/health`;
