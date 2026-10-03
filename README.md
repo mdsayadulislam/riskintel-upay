@@ -10,6 +10,13 @@
 
 ---
 
+## Live Deployment
+
+- **Interactive Simulator (Vercel):** https://riskintel-upay.vercel.app
+- **FastAPI Backend & OpenAPI Docs (Render):** https://riskintel-upay.onrender.com/docs
+
+---
+
 ## 1. Executive Overview
 
 Mobile Financial Services (MFS) in Bangladesh process over 150 million transactions daily. High transaction volumes combined with rapid fund turnover make MFS platforms prime targets for Account Takeovers (ATO), SIM-swap velocity bursts, brute-force PIN assaults, and midnight mule cash-outs.
