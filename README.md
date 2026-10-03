@@ -1,268 +1,224 @@
 # RiskIntel upay — Trust & Risk Intelligence Engine
 
-> **Track 01: Trust & Risk Intelligence**  
-> _AI DEV FEST 2026 Submission_  
-> Developed for **upay (UCB Fintech Ltd.)** — Next-Generation Mobile Financial Services (MFS) Fraud Detection & XAI Governance.
+[![Track](https://img.shields.io/badge/Track%2001-Trust%20%26%20Risk%20Intelligence-FFC800?style=for-the-badge&labelColor=063254)](https://github.com/si4795/riskintel-upay)
+[![Hackathon](https://img.shields.io/badge/UCB%20Fintech%20Ltd.-AI%20DEV%20FEST%202026-063254?style=for-the-badge&labelColor=FFC800)](https://github.com/si4795/riskintel-upay)
+[![Latency](https://img.shields.io/badge/Inference%20Latency-sub--20ms-10B981?style=for-the-badge&labelColor=063254)](https://github.com/si4795/riskintel-upay)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&labelColor=063254)](LICENSE)
+
+> **Official Submission for AI DEV FEST 2026 — Track 01: Trust & Risk Intelligence**  
+> *Developed for upay (UCB Fintech Ltd., Bangladesh)*
 
 ---
 
-## 1. Project Overview
+## 1. Executive Overview
 
-### The MFS Fraud Challenge in Bangladesh
+Mobile Financial Services (MFS) in Bangladesh process over 150 million transactions daily. High transaction volumes combined with rapid fund turnover make MFS platforms prime targets for Account Takeovers (ATO), SIM-swap velocity bursts, brute-force PIN assaults, and midnight mule cash-outs. 
 
-Bangladesh's Mobile Financial Services (MFS) ecosystem processes billions of Bangladeshi Taka (BDT) daily across more than 200 million registered accounts. As digital adoption surges, sophisticated threat actors increasingly exploit behavioral and structural vulnerabilities:
+**RiskIntel upay** is an ultra-low-latency (<20ms) fraud risk assessment engine and consumer transaction simulator tailored specifically for the upay ecosystem. The platform couples an optimized gradient-boosted decision forest (**LightGBM**) with local Explainable AI (**SHAP TreeExplainer**) and a real-time policy engine, enabling automated transaction triage across three operational tiers:
+- **`APPROVE`** — Frictionless instant processing for verified baseline transactions.
+- **`STEP_UP_2FA`** — Targeted multi-factor authentication challenge for borderline anomalies.
+- **`BLOCK_IMMEDIATELY`** — Instant pre-settlement halt for critical cyber and takeover patterns, complete with self-service identity recovery.
 
-- **Account Takeover (ATO) Attacks:** Unauthorized access gained via SIM swapping, social engineering phishing, and credential stuffing, followed by rapid device re-registration.
-- **Midnight Velocity Drains:** High-frequency transaction bursts coordinated between 01:00 AM and 04:00 AM while account holders sleep, delaying victim notifications and manual bank freeze protocols.
-- **Mule Agent Cash-Out Liquidation:** Rapid liquidation of illicit funds via remote agent points or rogue cash-out locations before anti-money laundering (AML) circuit breakers can activate.
+---
 
-### The RiskIntel Solution
-
-**RiskIntel upay** is an enterprise-grade AI risk scoring and local explainability engine designed specifically for the high-throughput, low-latency requirements of upay. By unifying ultra-fast tree-based gradient boosting (**LightGBM**) with game-theoretic local explainability (**SHAP TreeExplainer**), RiskIntel computes calibrated fraud probability scores ($0 - 100$) in sub-15ms latency and generates actionable, grounded analyst narratives that prevent black-box algorithmic discrimination.
+## 2. ASCII Architecture Diagram
 
 ```
-                           +------------------------------------------+
-                           |  upay Core MFS Transaction Stream (JSON) |
-                           +--------------------+---------------------+
-                                                |
-                                                v
-                           +------------------------------------------+
-                           |     FastAPI Edge Inference Gateway       |
-                           |   /api/v1/assess-risk (Pydantic Schema)  |
-                           +--------------------+---------------------+
-                                                |
-                       +------------------------+------------------------+
-                       |                                                 |
-                       v                                                 v
-         +----------------------------+                   +----------------------------+
-         |     LightGBM Classifier    |                   |     SHAP TreeExplainer     |
-         | Calibrated Fraud Log-Odds  |                   |  Local Feature Attribution |
-         +-------------+--------------+                   +--------------+-------------+
-                       |                                                 |
-                       +------------------------+------------------------+
-                                                |
-                                                v
-                           +------------------------------------------+
-                           |       Deterministic Policy Engine        |
-                           |   Score-Based Risk Tiering & Narrative   |
-                           +--------------------+---------------------+
-                                                |
-                     +--------------------------+--------------------------+
-                     |                          |                          |
-                     v                          v                          v
-             [Score < 40]               [Score 40 - 74]             [Score >= 75]
-               APPROVE                    STEP_UP_2FA              BLOCK_IMMEDIATELY
-             (Low Risk)                  (Medium Risk)                (High Risk)
++-----------------------------------------------------------------------------------+
+|                        RiskIntel upay - Fullstack Topology                        |
++-----------------------------------------------------------------------------------+
+                                          |
+                [ Consumer Client / Evaluator Dashboard ]
+                Next.js 14 App Router | React | Tailwind CSS
+                Authentic upay Mobile Handset + Real-Time Telemetry Inspector
+                                          |
+                                          | HTTP POST (JSON Payload)
+                                          | sub-20ms roundtrip
+                                          v
++-----------------------------------------------------------------------------------+
+|                   FastAPI High-Performance Gateway (:8000)                        |
+|                                                                                   |
+|  - Input Validation via Pydantic v2 Schemas (TransactionPayload)                 |
+|  - CORS Cross-Origin Handler & Health Probes (/health)                            |
+|  - Cold-Start Singleton Loading (fraud_model.pkl, shap_explainer.pkl)             |
++-----------------------------------------------------------------------------------+
+                                          |
+                   +----------------------+----------------------+
+                   |                                             |
+                   v                                             v
++------------------------------------+       +------------------------------------+
+|     LightGBM Classifier Engine     |       |     SHAP TreeExplainer Engine      |
+|  - 100 Gradient-Boosted Trees      |       |  - Local Feature Attribution       |
+|  - Class 1 Calibrated Probability  |       |  - Directional Impact Drivers (+/-)|
+|  - Output: Risk Index (0.0 - 100.0)|       |  - Output: Top 3 Critical Features |
++------------------------------------+       +------------------------------------+
+                   \                                             /
+                    \                                           /
+                     +--------------------+--------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+|                     Automated Policy & Governance Engine                          |
+|                                                                                   |
+|  - Score >= 75.0  --> BLOCK_IMMEDIATELY (Red Alert + Self-Service Unblock Recourse)|
+|  - Score >= 40.0  --> STEP_UP_2FA       (Amber Challenge + 6-digit Mock OTP)      |
+|  - Score <  40.0  --> APPROVE           (Green Instant Settlement + Balance Decr) |
++-----------------------------------------------------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+|                        Client Response & UI Presentation                          |
+|  - SVG Clamped Circular Risk Gauge (0-100)                                        |
+|  - Localized Bengali Investigation Narrative Briefing                             |
+|  - Color-Coded SHAP Attribution Visual Bars                                       |
+|  - Persistent Session State (LocalStorage Hydration)                              |
++-----------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 2. Core Features
+## 3. Regulatory Limits & MFS Policy Compliance
 
-- **Dynamic Risk Scoring Engine (0–100 Gauge Scale):** Continuously scores transaction risk using a trained LightGBM binary classifier ($n=100$) with probabilistic calibration.
-- **Local Explainability via SHAP TreeExplainer:** Deconstructs each individual prediction into exact mathematical contribution values (log-odds impact) for every feature, isolating the Top 3 local risk drivers.
-- **Real-Time Dual-View Transaction Simulator:** Interactive analyst console featuring granular controls for all 7 critical transaction vectors alongside 1-click test archetypes.
-- **Policy-Driven Action Governance:**
-  - `APPROVE` ($\text{Score} < 40$): Low risk baseline; frictionless transaction completion.
-  - `STEP_UP_2FA` ($40 \le \text{Score} < 75$): Medium risk; prompts user for biometric or SMS OTP challenge.
-  - `BLOCK_IMMEDIATELY` ($\text{Score} \ge 75$): High risk anomaly; transaction halted and flagged for audit.
-- **Grounded AI Investigation Narrative:** Auto-generates structured, context-specific 3-sentence briefings for fraud analysts, eliminating opaque decisions and ensuring end-to-end operational transparency.
+RiskIntel upay strictly enforces the transaction limits set by Bangladesh Bank for Mobile Financial Services:
 
----
-
-## 3. Technology Stack
-
-| Layer                  | Technologies                                                              | Purpose                                                                                              |
-| :--------------------- | :------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------- |
-| **Machine Learning**   | LightGBM, SHAP, Scikit-Learn, Joblib, NumPy, Pandas                       | Synthetic dataset generation, gradient boosted decision trees, TreeSHAP explainer, metric evaluation |
-| **Backend API**        | FastAPI, Uvicorn, Pydantic v2                                             | High-concurrency async REST API, strict schema validation, dynamic model path resolution             |
-| **Frontend Dashboard** | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Lucide Icons | Dual-column responsive triage console, animated SVG gauge, SHAP bar charts, real-time telemetry      |
+| Policy Metric | P2P Send Money (ব্যক্তিগত লেনদেন) | Agent Cash-Out (এজেন্ট ক্যাশ-আউট) | Enforcement Mechanism |
+| :--- | :--- | :--- | :--- |
+| **Minimum per Txn** | ৳১০.০০ | ৳৫০.০০ | Client UI Guard + Backend Schema |
+| **Maximum per Txn** | ৳২৫,০০০.০০ | ৳২৫,০০০.০০ | Strict Validation Warning |
+| **Daily Aggregate Cap** | ৳২৫,০০০.০০ (৫ বার) | ৳২৫,০০০.০০ (৫ বার) | Dynamic Form Blocker |
+| **Monthly Aggregate Cap** | ৳২,০০,০০০.০০ (৫০ বার) | ৳১,৫০,০০০.০০ (২০ বার) | Ledger Rule Check |
+| **Demo Initial Balance** | ৳৩৫,০০০.০০ | ৳৩৫,০০০.০০ | Dynamic Balance with ↻ +৳২০k Top-up |
 
 ---
 
-## 4. Prerequisites & Requirements
+## 4. Evaluator Test Scenarios & Expected AI Decisions
 
-- **Operating System:** Windows 10/11, macOS, or Linux
-- **Python:** Python 3.10+ (tested on Python 3.14)
-- **Node.js:** Node.js 18.x or 20.x+ (tested on Node v22.14.0) with `npm`
-- **Memory & Storage:** 4 GB RAM minimum; 500 MB free disk space
+The top Evaluator Sandbox Toolbar provides 1-click test scenarios that instantly synchronize the mobile handset inputs and background telemetry:
+
+| Scenario Preset | Txn Parameters | Telemetry State | Expected Risk Score | Decision Action | Primary SHAP Drivers |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Normal P2P** | Amount: ৳500<br>Channel: P2P Send Money (0) | Hour: 14:00 (Daytime)<br>Velocity: 1 txn/hr<br>Device Changes: 0<br>Failed PINs: 0<br>Distance: 1.2 km | **0.05 / 100** | **`APPROVE`**<br>(Green Success) | `txn_amount` (-0.61)<br>`is_cash_out` (-0.40)<br>`device_change_count_30d` (-0.34) |
+| **2. ATO Attack** | Amount: ৳25,000<br>Channel: Cash-Out (1) | Hour: 03:00 (Midnight Spike)<br>Velocity: 6 txns/hr<br>Device Changes: 2 (SIM Swap)<br>Failed PINs: 3<br>Distance: 18.5 km | **99.80 / 100** | **`BLOCK_IMMEDIATELY`**<br>(Red Halt + Recovery) | `txn_amount` (+3.07)<br>`failed_pin_attempts_24h` (+2.76)<br>`device_change_count_30d` (+2.15) |
+| **3. Midnight Cashout** | Amount: ৳18,000<br>Channel: Cash-Out (1) | Hour: 02:00 (Midnight Anomaly)<br>Velocity: 4 txns/hr<br>Device Changes: 1<br>Failed PINs: 1<br>Distance: 8.0 km | **99.12 / 100** | **`BLOCK_IMMEDIATELY`**<br>(Red Halt + Recovery) | `txn_amount` (+3.08)<br>`failed_pin_attempts_24h` (+2.74)<br>`hour_of_day` (+2.45) |
 
 ---
 
-## 5. Step-by-Step Local Installation & Setup
+## 5. Technology Stack Breakdown
 
-Open **Windows Command Prompt (`cmd.exe`)** or **PowerShell** and execute the following commands:
+### Backend & Machine Learning
+- **Python 3.10+** — Runtime environment.
+- **FastAPI** — High-throughput asynchronous REST gateway.
+- **Uvicorn** — Lightning-fast ASGI web server implementation.
+- **LightGBM (`LGBMClassifier`)** — Gradient-boosted decision tree algorithm trained on 12,000 synthetic MFS transactions.
+- **SHAP (`TreeExplainer`)** — Game-theoretic local feature attribution calculating exact Shapley values.
+- **Pydantic v2** — Strict request/response payload typing and boundary validation.
+- **Joblib** — Serialization and persistence of trained model and explainer artifacts.
+- **Pandas & NumPy** — High-performance vector transformations.
 
-```cmd
-:: 1. Clone the repository and enter the root workspace
+### Frontend Dashboard & Simulator
+- **Next.js 14 (App Router)** — React-based server and client rendering architecture.
+- **TypeScript** — Compile-time type safety across data pipelines.
+- **Tailwind CSS** — Custom design system matching official upay brand guidelines:
+  - Radiant Yellow: `#FFC800`
+  - Deep Corporate Blue: `#063254`
+  - Soft Neutral Canvas: `#F4F6F8`
+- **Lucide React** — Crisp fintech and telemetry iconography.
+- **LocalStorage API** — Automatic state hydration and cross-refresh persistence.
+
+---
+
+## 6. Step-by-Step Installation & Run Guide
+
+### Prerequisites
+- Python 3.10 or higher installed.
+- Node.js 18.x or higher and npm installed.
+- Git installed.
+
+### Step 1: Clone the Repository
+```bash
 git clone https://github.com/si4795/riskintel-upay.git
 cd riskintel-upay
+```
 
-:: 2. Setup Python Virtual Environment and Install Backend Dependencies
+### Step 2: Backend Setup & ML Pipeline Execution
+```bash
+# 1. Create and activate a Python virtual environment
 python -m venv venv
-call venv\Scripts\activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 
-:: 3. Train the Model and Generate Artifacts
-:: (Generates 12,000 synthetic upay rows, trains LightGBM, fits SHAP, and saves models)
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+# Linux / macOS:
+# source venv/bin/activate
+
+# 2. Upgrade pip and install backend dependencies
+pip install --upgrade pip
+pip install fastapi uvicorn lightgbm shap scikit-learn pandas numpy joblib pydantic
+
+# 3. Train the model and generate serialized artifacts
 python backend/train_pipeline.py
+```
+*Expected training output:*
+- `models/fraud_model.pkl` generated.
+- `models/shap_explainer.pkl` generated.
+- `data/synthetic_upay_txns.csv` generated (12,000 rows).
+- Validation ROC-AUC score: `>0.98`.
 
-:: 4. Install Frontend Dependencies
+### Step 3: Launch FastAPI Gateway
+```bash
+python backend/main.py
+```
+*The API gateway runs at `http://127.0.0.1:8000`. Interactive documentation is available at `http://127.0.0.1:8000/docs`.*
+
+### Step 4: Frontend Dashboard Setup & Launch
+Open a second terminal window:
+```bash
 cd frontend
+
+# Install Node dependencies
 npm install
-cd ..
-```
 
----
-
-## 6. Environment Variables Configuration
-
-### Backend Configuration
-
-The backend is engineered with zero-configuration sensible defaults. Optionally create `backend/.env` for custom network bindings:
-
-```env
-HOST=0.0.0.0
-PORT=8000
-ENVIRONMENT=development
-CORS_ORIGINS=["*"]
-```
-
-### Frontend Configuration
-
-Create `frontend/.env.local` (optional, defaults to local FastAPI URL):
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1/assess-risk
-NEXT_PUBLIC_HEALTH_URL=http://localhost:8000/health
-```
-
----
-
-## 7. Run and Build Commands
-
-### Step 1: Start the Backend Server (Terminal 1)
-
-From the project root:
-
-```cmd
-call venv\Scripts\activate
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-_The FastAPI backend will start at `http://localhost:8000`. Access interactive API documentation at `http://localhost:8000/docs`._
-
-### Step 2: Start the Frontend Dashboard (Terminal 2)
-
-From the project root:
-
-```cmd
-cd frontend
+# Start the Next.js development server
 npm run dev
 ```
-
-_The Next.js dashboard will be accessible at `http://localhost:3000`._
-
-### Optional: Frontend Production Build
-
-To verify production optimization and static bundle size:
-
-```cmd
-cd frontend
-npm run build
-npm run start
-```
+*The interactive dashboard will be accessible at `http://localhost:3000`.*
 
 ---
 
-## 8. Live Deployment URLs
+## 7. Local Explainability & SHAP Attribution Design
 
-| Service                  | Platform         | URL Placeholder                                | Status               |
-| :----------------------- | :--------------- | :--------------------------------------------- | :------------------- |
-| **Frontend Web App**     | Vercel           | `https://riskintel-upay.vercel.app`            | Ready for Deployment |
-| **Backend REST API**     | Render / Railway | `https://riskintel-upay-api.onrender.com`      | Ready for Deployment |
-| **Interactive API Docs** | Swagger UI       | `https://riskintel-upay-api.onrender.com/docs` | Ready for Deployment |
+Black-box machine learning models are unacceptable in regulated financial services. RiskIntel upay solves this by embedding SHAP TreeExplainer directly into the scoring loop:
 
----
+$$\phi_i(x) = \sum_{S \subseteq F \setminus \{i\}} \frac{|S|!(|F| - |S| - 1)!}{|F|!} \left[ f_x(S \cup \{i\}) - f_x(S) \right]$$
 
-## 9. Testing Instructions & Scenario Verification
-
-RiskIntel includes 3 pre-configured scenario presets in the web interface and CLI for immediate evaluation.
-
-### Preset A: Scenario 1 — "Normal P2P" (Legitimate Everyday User)
-
-- **Vectors:** Amount: ৳500 | Hour: 14:00 | Velocity: 1 | Failed PINs: 0 | Device Changes: 0 | Cash-Out: 0 (P2P)
-- **Expected Outcome:**
-  - **Risk Score:** $< 40.0$ (typically $\approx 0.03$)
-  - **Verdict:** `APPROVE` (Emerald Green)
-  - **Narrative:** _"Transaction conforms to expected baseline behavior. Low fraud probability across velocity and biometric markers."_
-
-```bash
-curl -X POST http://localhost:8000/api/v1/assess-risk \
-  -H "Content-Type: application/json" \
-  -d '{"txn_amount":500,"hour_of_day":14,"device_change_count_30d":0,"velocity_last_1h":1,"agent_distance_km":1.2,"failed_pin_attempts_24h":0,"is_cash_out":0}'
-```
+1. **Local Attribution**: Every scored transaction returns the exact numerical contribution ($\phi_i$) for each of the 7 features.
+2. **Directional Impact**:
+   - **Positive Impact ($\phi_i > 0$)**: Pushes the transaction towards fraud (highlighted in red/amber bars).
+   - **Negative Impact ($\phi_i < 0$)**: Anchors the transaction towards legitimate behavior (highlighted in green/teal bars).
+3. **Auditable Narrative**: The top 3 absolute drivers are dynamically synthesized into human-readable compliance narratives for audit trails and operations teams.
 
 ---
 
-### Preset B: Scenario 2 — "Account Takeover (ATO) Attack"
+## 8. In-App Mobile Simulator & Self-Service Unblock Workflow
 
-- **Vectors:** Amount: ৳25,000 | Hour: 03:00 (Midnight) | Velocity: 6 | Failed PINs: 3 | Device Changes: 2 | Cash-Out: 1
-- **Expected Outcome:**
-  - **Risk Score:** $\ge 75.0$ (typically $\ge 99.0$)
-  - **Verdict:** `BLOCK_IMMEDIATELY` (Crimson Red)
-  - **Top SHAP Drivers:** `txn_amount`, `failed_pin_attempts_24h`, `device_change_count_30d`
-  - **Narrative:** _"Critical risk detected. Significant anomaly driven by txn_amount, failed_pin_attempts_24h, device_change_count_30d. Transaction halted; step-up audit mandated for upay operations."_
-
-```bash
-curl -X POST http://localhost:8000/api/v1/assess-risk \
-  -H "Content-Type: application/json" \
-  -d '{"txn_amount":25000,"hour_of_day":3,"device_change_count_30d":2,"velocity_last_1h":6,"agent_distance_km":18.5,"failed_pin_attempts_24h":3,"is_cash_out":1}'
-```
+Unlike generic developer consoles, RiskIntel upay simulates the actual mobile application handset experience for upay customers:
+- **Balance & Top-Up**: Starts with ৳35,000.00. Evaluators can tap **+৳২০,০০০** to replenish funds at any time.
+- **Dynamic Deduction**: Approving a transaction or completing identity verification deducts funds immediately across the app interface.
+- **Quick Amount Chips**: `+৳500`, `+৳2,000`, `+৳10,000`, `+৳25,000` clamp within balance and regulatory daily caps; `↺` restores default ৳500.
+- **Self-Service Recovery**: When a transaction is blocked (`BLOCK_IMMEDIATELY`), users are not stranded with a dead-end message. They can tap **"ওটিপি ও বায়োমেট্রিক দিয়ে তাৎক্ষণিক আনলক করুন"**, verify a 6-digit mock OTP (`123456`), clear failed PIN counts, and execute their urgent transfer safely.
 
 ---
 
-### Preset C: Scenario 3 — "Midnight Cash-out Anomaly"
+## 9. Responsible AI & Ethical Governance
 
-- **Vectors:** Amount: ৳18,000 | Hour: 02:00 | Velocity: 4 | Failed PINs: 1 | Device Changes: 1 | Cash-Out: 1
-- **Expected Outcome:**
-  - **Risk Score:** $40.0 \le \text{Score} < 75.0$ (typically $\approx 69.3$)
-  - **Verdict:** `STEP_UP_2FA` (Amber Yellow)
-  - **Top SHAP Drivers:** `txn_amount`, `is_cash_out`, `hour_of_day`
-  - **Narrative:** _"Moderate risk variance identified due to elevated txn_amount, is_cash_out, hour_of_day. Prompt user for biometric or SMS OTP challenge."_
-
-```bash
-curl -X POST http://localhost:8000/api/v1/assess-risk \
-  -H "Content-Type: application/json" \
-  -d '{"txn_amount":18000,"hour_of_day":2,"device_change_count_30d":1,"velocity_last_1h":4,"agent_distance_km":8.0,"failed_pin_attempts_24h":1,"is_cash_out":1}'
-```
+- **Zero Real PII Storage**: All training data (12,000 records) is synthetically generated using statistical distributions mirroring legitimate MFS behavior and known fraud topologies. No customer NID, phone numbers, or account pins are stored.
+- **Explainability by Default**: Every automated decision is backed by mathematical feature attribution, eliminating black-box bias.
+- **Human-in-the-Loop Safeguards**: Borderline transactions (scores 40.0–74.9) trigger step-up multi-factor verification rather than outright cancellation, preventing legitimate customer lockout.
 
 ---
 
-## 10. Responsible AI, Bias & Compliance
+## 10. Contributors & License
 
-RiskIntel upay has been architected to adhere strictly to the **Trust & Risk Intelligence** mandate of AI DEV FEST 2026 and national regulatory frameworks:
-
-1. **Zero Synthetic Personally Identifiable Information (PII):**
-   - The engine processes exclusively anonymized behavioral, temporal, and spatial telemetry (`txn_amount`, `hour_of_day`, `velocity_last_1h`, etc.).
-   - No National ID (NID) numbers, biometric raw templates, phone numbers (MSISDN), or demographic identifiers are stored, ingested, or used for model training.
-
-2. **Explainability-First Architecture (Preventing Black-Box Harm):**
-   - Traditional deep neural networks create opaque decisions that harm consumer trust. RiskIntel integrates **SHAP (Shapley Additive Explanations)** directly into every inference request.
-   - For every flagged transaction, the engine computes exact Shapley values showing which feature increased or decreased risk, empowering compliance analysts to justify decisions.
-
-3. **Human-in-the-Loop Analyst Governance:**
-   - Transactions with moderate risk ($40 \le \text{Score} < 75$) are not outright blocked; rather, a stepped-up challenge (`STEP_UP_2FA`) is triggered, protecting consumer inclusion while preventing fraudulent loss.
-   - High-risk halts (`BLOCK_IMMEDIATELY`) provide full audit logs ready for review by human fraud investigation teams.
-
-4. **Regulatory Alignment with Bangladesh Bank Guidelines:**
-   - Adheres to the **Bangladesh Bank Guidelines for Mobile Financial Services (MFS)** and the **National Payment Systems Regulatory Framework**.
-   - Preserves deterministic audit trails that satisfy AML/CFT (Anti-Money Laundering and Combating the Financing of Terrorism) inspection requirements.
-
----
-
-## License & Attribution
-
-Developed for the **AI DEV FEST 2026** Hackathon (Track 01: Trust & Risk Intelligence).  
-_Proprietary concept designed for evaluation and demonstration with upay (UCB Fintech Ltd.)._
+- **Developer**: Md. Suaib (si4795)
+- **Track**: Track 01 — Trust & Risk Intelligence
+- **Event**: AI DEV FEST 2026, UCB Fintech Ltd.
+- **License**: MIT Open Source License
