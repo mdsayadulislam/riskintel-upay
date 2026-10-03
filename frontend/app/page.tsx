@@ -479,6 +479,7 @@ export default function RiskIntelUpayDashboard() {
   const [lastAssessedAt, setLastAssessedAt] = useState<string>('');
   const [showBalance, setShowBalance] = useState<boolean>(false);
   const [referenceNote, setReferenceNote] = useState<string>('');
+  const [pin, setPin] = useState<string>('1234');
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
   // Modal State
@@ -489,8 +490,9 @@ export default function RiskIntelUpayDashboard() {
   const [recovering, setRecovering] = useState<boolean>(false);
   const [recoverySuccess, setRecoverySuccess] = useState<boolean>(false);
 
-  const API_ASSESS_URL = 'http://127.0.0.1:8000/api/v1/assess-risk';
-  const API_HEALTH_URL = 'http://127.0.0.1:8000/health';
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const API_ASSESS_URL = `${API_BASE}/api/v1/assess-risk`;
+  const API_HEALTH_URL = `${API_BASE}/health`;
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Hydrate State from LocalStorage on mount
@@ -574,7 +576,8 @@ export default function RiskIntelUpayDashboard() {
   };
 
   const validationError = getValidationError(currentAmount, formData.is_cash_out, balance);
-  const isSubmitDisabled = loading || validationError !== null;
+  const isPinValid = pin.length === 4;
+  const isSubmitDisabled = loading || validationError !== null || !isPinValid;
 
   // Replenish Demo Balance (+৳20,000)
   const handleTopUp = () => {
@@ -1161,10 +1164,10 @@ export default function RiskIntelUpayDashboard() {
                         setActiveScenario('custom');
                         setFormData((prev) => ({ ...prev, is_cash_out: 0 }));
                       }}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      className={`flex-1 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
                         formData.is_cash_out === 0
-                          ? 'bg-white text-[#063254] shadow-sm'
-                          : 'text-slate-600 hover:text-slate-800'
+                          ? 'bg-[#063254] text-white shadow-sm font-medium'
+                          : 'text-slate-600 hover:text-slate-900 font-normal bg-transparent'
                       }`}
                     >
                       <Send className="h-3.5 w-3.5" />
@@ -1177,10 +1180,10 @@ export default function RiskIntelUpayDashboard() {
                         setActiveScenario('custom');
                         setFormData((prev) => ({ ...prev, is_cash_out: 1 }));
                       }}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      className={`flex-1 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
                         formData.is_cash_out === 1
-                          ? 'bg-[#063254] text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-800'
+                          ? 'bg-[#063254] text-white shadow-sm font-medium'
+                          : 'text-slate-600 hover:text-slate-900 font-normal bg-transparent'
                       }`}
                     >
                       <Building2 className="h-3.5 w-3.5" />
@@ -1311,6 +1314,35 @@ export default function RiskIntelUpayDashboard() {
                       />
                     </div>
 
+                    {/* Realistic MFS 4-Digit PIN Input Field */}
+                    <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="mfs-pin" className="text-xs font-bold text-[#063254] flex items-center gap-1.5">
+                          <Lock className="h-3.5 w-3.5 text-[#063254]" />
+                          <span>আপনার upay পিন নম্বর দিন</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">৪ সংখ্যা</span>
+                      </div>
+                      <input
+                        id="mfs-pin"
+                        type="password"
+                        maxLength={4}
+                        value={pin}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          setPin(digitsOnly);
+                        }}
+                        placeholder="••••"
+                        className="w-full py-2 px-3 text-center text-lg font-black font-mono tracking-widest text-[#063254] bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#FFC800] focus:bg-white transition"
+                        required
+                      />
+                      {pin.length > 0 && pin.length < 4 && (
+                        <p className="text-[10px] text-red-500 font-medium text-center">
+                          ৪ সংখ্যার সঠিক পিন নম্বর প্রদান করুন
+                        </p>
+                      )}
+                    </div>
+
                     {/* Submit Button */}
                     <button
                       type="submit"
@@ -1329,7 +1361,7 @@ export default function RiskIntelUpayDashboard() {
                       ) : (
                         <>
                           <Send className={`h-4 w-4 ${isSubmitDisabled ? 'text-slate-400' : 'text-[#FFC800]'}`} />
-                          <span>টাকা পাঠান / নিশ্চিত করুন</span>
+                          <span>{formData.is_cash_out === 1 ? 'ক্যাশ আউট নিশ্চিত করুন' : 'টাকা পাঠান / নিশ্চিত করুন'}</span>
                         </>
                       )}
                     </button>
