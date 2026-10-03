@@ -6,15 +6,16 @@
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&labelColor=063254)](LICENSE)
 
 > **Official Submission for AI DEV FEST 2026 — Track 01: Trust & Risk Intelligence**  
-> *Developed for upay (UCB Fintech Ltd., Bangladesh)*
+> _Developed for upay (UCB Fintech Ltd., Bangladesh)_
 
 ---
 
 ## 1. Executive Overview
 
-Mobile Financial Services (MFS) in Bangladesh process over 150 million transactions daily. High transaction volumes combined with rapid fund turnover make MFS platforms prime targets for Account Takeovers (ATO), SIM-swap velocity bursts, brute-force PIN assaults, and midnight mule cash-outs. 
+Mobile Financial Services (MFS) in Bangladesh process over 150 million transactions daily. High transaction volumes combined with rapid fund turnover make MFS platforms prime targets for Account Takeovers (ATO), SIM-swap velocity bursts, brute-force PIN assaults, and midnight mule cash-outs.
 
 **RiskIntel upay** is an ultra-low-latency (<20ms) fraud risk assessment engine and consumer transaction simulator tailored specifically for the upay ecosystem. The platform couples an optimized gradient-boosted decision forest (**LightGBM**) with local Explainable AI (**SHAP TreeExplainer**) and a real-time policy engine, enabling automated transaction triage across three operational tiers:
+
 - **`APPROVE`** — Frictionless instant processing for verified baseline transactions.
 - **`STEP_UP_2FA`** — Targeted multi-factor authentication challenge for borderline anomalies.
 - **`BLOCK_IMMEDIATELY`** — Instant pre-settlement halt for critical cyber and takeover patterns, complete with self-service identity recovery.
@@ -81,13 +82,13 @@ Mobile Financial Services (MFS) in Bangladesh process over 150 million transacti
 
 RiskIntel upay strictly enforces the transaction limits set by Bangladesh Bank for Mobile Financial Services:
 
-| Policy Metric | P2P Send Money (ব্যক্তিগত লেনদেন) | Agent Cash-Out (এজেন্ট ক্যাশ-আউট) | Enforcement Mechanism |
-| :--- | :--- | :--- | :--- |
-| **Minimum per Txn** | ৳১০.০০ | ৳৫০.০০ | Client UI Guard + Backend Schema |
-| **Maximum per Txn** | ৳২৫,০০০.০০ | ৳২৫,০০০.০০ | Strict Validation Warning |
-| **Daily Aggregate Cap** | ৳২৫,০০০.০০ (৫ বার) | ৳২৫,০০০.০০ (৫ বার) | Dynamic Form Blocker |
-| **Monthly Aggregate Cap** | ৳২,০০,০০০.০০ (৫০ বার) | ৳১,৫০,০০০.০০ (২০ বার) | Ledger Rule Check |
-| **Demo Initial Balance** | ৳৩৫,০০০.০০ | ৳৩৫,০০০.০০ | Dynamic Balance with ↻ +৳২০k Top-up |
+| Policy Metric             | P2P Send Money (ব্যক্তিগত লেনদেন) | Agent Cash-Out (এজেন্ট ক্যাশ-আউট) | Enforcement Mechanism               |
+| :------------------------ | :-------------------------------- | :-------------------------------- | :---------------------------------- |
+| **Minimum per Txn**       | ৳১০.০০                            | ৳৫০.০০                            | Client UI Guard + Backend Schema    |
+| **Maximum per Txn**       | ৳২৫,০০০.০০                        | ৳২৫,০০০.০০                        | Strict Validation Warning           |
+| **Daily Aggregate Cap**   | ৳২৫,০০০.০০ (৫ বার)                | ৳২৫,০০০.০০ (৫ বার)                | Dynamic Form Blocker                |
+| **Monthly Aggregate Cap** | ৳২,০০,০০০.০০ (৫০ বার)             | ৳১,৫০,০০০.০০ (২০ বার)             | Ledger Rule Check                   |
+| **Demo Initial Balance**  | ৳৩৫,০০০.০০                        | ৳৩৫,০০০.০০                        | Dynamic Balance with ↻ +৳২০k Top-up |
 
 ---
 
@@ -95,17 +96,18 @@ RiskIntel upay strictly enforces the transaction limits set by Bangladesh Bank f
 
 The top Evaluator Sandbox Toolbar provides 1-click test scenarios that instantly synchronize the mobile handset inputs and background telemetry:
 
-| Scenario Preset | Txn Parameters | Telemetry State | Expected Risk Score | Decision Action | Primary SHAP Drivers |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Normal P2P** | Amount: ৳500<br>Channel: P2P Send Money (0) | Hour: 14:00 (Daytime)<br>Velocity: 1 txn/hr<br>Device Changes: 0<br>Failed PINs: 0<br>Distance: 1.2 km | **0.05 / 100** | **`APPROVE`**<br>(Green Success) | `txn_amount` (-0.61)<br>`is_cash_out` (-0.40)<br>`device_change_count_30d` (-0.34) |
-| **2. ATO Attack** | Amount: ৳25,000<br>Channel: Cash-Out (1) | Hour: 03:00 (Midnight Spike)<br>Velocity: 6 txns/hr<br>Device Changes: 2 (SIM Swap)<br>Failed PINs: 3<br>Distance: 18.5 km | **99.80 / 100** | **`BLOCK_IMMEDIATELY`**<br>(Red Halt + Recovery) | `txn_amount` (+3.07)<br>`failed_pin_attempts_24h` (+2.76)<br>`device_change_count_30d` (+2.15) |
-| **3. Midnight Cashout** | Amount: ৳18,000<br>Channel: Cash-Out (1) | Hour: 02:00 (Midnight Anomaly)<br>Velocity: 4 txns/hr<br>Device Changes: 1<br>Failed PINs: 1<br>Distance: 8.0 km | **99.12 / 100** | **`BLOCK_IMMEDIATELY`**<br>(Red Halt + Recovery) | `txn_amount` (+3.08)<br>`failed_pin_attempts_24h` (+2.74)<br>`hour_of_day` (+2.45) |
+| Scenario Preset         | Txn Parameters                              | Telemetry State                                                                                                            | Expected Risk Score | Decision Action                                  | Primary SHAP Drivers                                                                           |
+| :---------------------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------- | :------------------ | :----------------------------------------------- | :--------------------------------------------------------------------------------------------- |
+| **1. Normal P2P**       | Amount: ৳500<br>Channel: P2P Send Money (0) | Hour: 14:00 (Daytime)<br>Velocity: 1 txn/hr<br>Device Changes: 0<br>Failed PINs: 0<br>Distance: 1.2 km                     | **0.05 / 100**      | **`APPROVE`**<br>(Green Success)                 | `txn_amount` (-0.61)<br>`is_cash_out` (-0.40)<br>`device_change_count_30d` (-0.34)             |
+| **2. ATO Attack**       | Amount: ৳25,000<br>Channel: Cash-Out (1)    | Hour: 03:00 (Midnight Spike)<br>Velocity: 6 txns/hr<br>Device Changes: 2 (SIM Swap)<br>Failed PINs: 3<br>Distance: 18.5 km | **99.80 / 100**     | **`BLOCK_IMMEDIATELY`**<br>(Red Halt + Recovery) | `txn_amount` (+3.07)<br>`failed_pin_attempts_24h` (+2.76)<br>`device_change_count_30d` (+2.15) |
+| **3. Midnight Cashout** | Amount: ৳18,000<br>Channel: Cash-Out (1)    | Hour: 02:00 (Midnight Anomaly)<br>Velocity: 4 txns/hr<br>Device Changes: 1<br>Failed PINs: 1<br>Distance: 8.0 km           | **99.12 / 100**     | **`BLOCK_IMMEDIATELY`**<br>(Red Halt + Recovery) | `txn_amount` (+3.08)<br>`failed_pin_attempts_24h` (+2.74)<br>`hour_of_day` (+2.45)             |
 
 ---
 
 ## 5. Technology Stack Breakdown
 
 ### Backend & Machine Learning
+
 - **Python 3.10+** — Runtime environment.
 - **FastAPI** — High-throughput asynchronous REST gateway.
 - **Uvicorn** — Lightning-fast ASGI web server implementation.
@@ -116,6 +118,7 @@ The top Evaluator Sandbox Toolbar provides 1-click test scenarios that instantly
 - **Pandas & NumPy** — High-performance vector transformations.
 
 ### Frontend Dashboard & Simulator
+
 - **Next.js 14 (App Router)** — React-based server and client rendering architecture.
 - **TypeScript** — Compile-time type safety across data pipelines.
 - **Tailwind CSS** — Custom design system matching official upay brand guidelines:
@@ -130,17 +133,20 @@ The top Evaluator Sandbox Toolbar provides 1-click test scenarios that instantly
 ## 6. Step-by-Step Installation & Run Guide
 
 ### Prerequisites
+
 - Python 3.10 or higher installed.
 - Node.js 18.x or higher and npm installed.
 - Git installed.
 
 ### Step 1: Clone the Repository
+
 ```bash
 git clone https://github.com/si4795/riskintel-upay.git
 cd riskintel-upay
 ```
 
 ### Step 2: Backend Setup & ML Pipeline Execution
+
 ```bash
 # 1. Create and activate a Python virtual environment
 python -m venv venv
@@ -157,20 +163,26 @@ pip install fastapi uvicorn lightgbm shap scikit-learn pandas numpy joblib pydan
 # 3. Train the model and generate serialized artifacts
 python backend/train_pipeline.py
 ```
-*Expected training output:*
+
+_Expected training output:_
+
 - `models/fraud_model.pkl` generated.
 - `models/shap_explainer.pkl` generated.
 - `data/synthetic_upay_txns.csv` generated (12,000 rows).
 - Validation ROC-AUC score: `>0.98`.
 
 ### Step 3: Launch FastAPI Gateway
+
 ```bash
 python backend/main.py
 ```
-*The API gateway runs at `http://127.0.0.1:8000`. Interactive documentation is available at `http://127.0.0.1:8000/docs`.*
+
+_The API gateway runs at `http://127.0.0.1:8000`. Interactive documentation is available at `http://127.0.0.1:8000/docs`._
 
 ### Step 4: Frontend Dashboard Setup & Launch
+
 Open a second terminal window:
+
 ```bash
 cd frontend
 
@@ -180,7 +192,8 @@ npm install
 # Start the Next.js development server
 npm run dev
 ```
-*The interactive dashboard will be accessible at `http://localhost:3000`.*
+
+_The interactive dashboard will be accessible at `http://localhost:3000`._
 
 ---
 
@@ -201,6 +214,7 @@ $$\phi_i(x) = \sum_{S \subseteq F \setminus \{i\}} \frac{|S|!(|F| - |S| - 1)!}{|
 ## 8. In-App Mobile Simulator & Self-Service Unblock Workflow
 
 Unlike generic developer consoles, RiskIntel upay simulates the actual mobile application handset experience for upay customers:
+
 - **Balance & Top-Up**: Starts with ৳35,000.00. Evaluators can tap **+৳২০,০০০** to replenish funds at any time.
 - **Dynamic Deduction**: Approving a transaction or completing identity verification deducts funds immediately across the app interface.
 - **Quick Amount Chips**: `+৳500`, `+৳2,000`, `+৳10,000`, `+৳25,000` clamp within balance and regulatory daily caps; `↺` restores default ৳500.
@@ -216,9 +230,13 @@ Unlike generic developer consoles, RiskIntel upay simulates the actual mobile ap
 
 ---
 
-## 10. Contributors & License
+## 10. Team & Contributors
 
-- **Developer**: Md. Suaib (si4795)
-- **Track**: Track 01 — Trust & Risk Intelligence
-- **Event**: AI DEV FEST 2026, UCB Fintech Ltd.
-- **License**: MIT Open Source License
+- **Team Name:** Loading_211
+- **Team Members:**
+  1. **Md. Suaib Islam** (@si4795) — Lead Developer & Architecture
+  2. **Md. Sayadul Islam** — Machine Learning & Research
+  3. **Md. Elias Ahmed** — Frontend & QA Testing
+- **Track:** Track 01 — Trust & Risk Intelligence
+- **Event:** AI DEV FEST 2026
+- **License:** MIT Open Source License
