@@ -36,6 +36,7 @@ RATE_LIMIT_2FA_PER_MIN = int(os.getenv("RATE_LIMIT_2FA_PER_MIN", "10"))
 RATE_LIMIT_RECOVERY_PER_MIN = int(os.getenv("RATE_LIMIT_RECOVERY_PER_MIN", "5"))
 
 # Database & File Paths
+DATABASE_URL = os.getenv("DATABASE_URL")  # Render PostgreSQL connection string if available
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
 DATA_DIR = os.getenv("DATA_DIR", os.path.join(PROJECT_ROOT, "data"))
@@ -49,8 +50,17 @@ MODEL_FILE_PATH = os.path.join(MODELS_DIR, "fraud_model.pkl")
 EXPLAINER_FILE_PATH = os.path.join(MODELS_DIR, "shap_explainer.pkl")
 DATASET_FILE_PATH = os.path.join(DATA_DIR, "synthetic_upay_txns.csv")
 
-# 2FA and Account Recovery TTLs
+# 2FA and Account Recovery TTLs & Rate Limits
 TWO_FACTOR_EXPIRY_SECONDS = int(os.getenv("TWO_FACTOR_EXPIRY_SECONDS", "300"))  # 5 minutes
 TWO_FACTOR_MAX_ATTEMPTS = int(os.getenv("TWO_FACTOR_MAX_ATTEMPTS", "3"))
 RECOVERY_TOKEN_EXPIRY_SECONDS = int(os.getenv("RECOVERY_TOKEN_EXPIRY_SECONDS", "900"))  # 15 minutes
+RATE_LIMIT_TXN_PER_MIN = int(os.getenv("RATE_LIMIT_TXN_PER_MIN", "30"))
+RATE_LIMIT_OTP_REQUEST_PER_WINDOW = int(os.getenv("RATE_LIMIT_OTP_REQUEST_PER_WINDOW", "3"))
+
+# SMS Provider Configuration
+SMS_PROVIDER = os.getenv("SMS_PROVIDER", "development").lower()
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER", "")
+DEMO_USER_PHONE = os.getenv("DEMO_USER_PHONE", "+8801812345678")
 

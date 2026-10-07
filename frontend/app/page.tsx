@@ -125,19 +125,22 @@ const FEATURE_META: Record<string, { label: string; bnLabel: string; icon: any }
 // ============================================================================
 
 /** In-App Modal Overlay for upay Mobile App */
+/** In-App Modal Overlay for upay Mobile App */
 interface ModalProps {
   isOpen: boolean;
   result: RiskAssessmentResult;
   formData: TxnFormData;
   balance: number;
   onClose: () => void;
-  on2FAVerify: () => void;
-  onSelfServiceRecovery: () => void;
+  on2FAVerify: (code: string) => void;
+  onSelfServiceRecovery: (newPin: string) => void;
   verifyingOtp: boolean;
   otpVerified: boolean;
+  otpError?: string;
   recoveryMode: boolean;
   recovering: boolean;
   recoverySuccess: boolean;
+  recoveryError?: string;
   setRecoveryMode: (val: boolean) => void;
   challengeOtp?: string;
   recoveryToken?: string;
@@ -154,20 +157,22 @@ function TransactionFeedbackModal({
   onSelfServiceRecovery,
   verifyingOtp,
   otpVerified,
+  otpError,
   recoveryMode,
   recovering,
   recoverySuccess,
+  recoveryError,
   setRecoveryMode,
   challengeOtp,
   recoveryToken,
   correlationId,
 }: ModalProps) {
+  const [enteredOtp, setEnteredOtp] = useState<string>('');
+  const [newRecoveryPin, setNewRecoveryPin] = useState<string>('1234');
+
   if (!isOpen) return null;
 
   const currentAmount = Number(formData.txn_amount) || 0;
-  const otpDisplayDigits = (challengeOtp && challengeOtp.length === 6)
-    ? challengeOtp.split('')
-    : ['8', '4', '1', '9', '2', '0'];
 
   return (
     <div className="absolute inset-0 z-30 bg-[#063254]/60 backdrop-blur-sm flex items-end justify-center p-3 animate-in fade-in duration-200">
@@ -253,28 +258,62 @@ function TransactionFeedbackModal({
                 অতিরিক্ত সুরক্ষা যাচাই (2FA) আবশ্যক!
               </h3>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                নিরাপত্তাজনিত কারণে ব্যাকএন্ড ইঞ্জিনের মাধ্যমে ওটিপি চ্যালেঞ্জ জারি করা হয়েছে।
+                নিরাপত্তাজনিত কারণে ব্যাকএন্ড ইঞ্জিনের মাধ্যমে এসএমএস ওটিপি চ্যালেঞ্জ জারি করা হয়েছে।
               </p>
             </div>
 
-            <div className="py-2">
-              <div className="flex items-center justify-center gap-2">
-                {otpDisplayDigits.map((digit, idx) => (
-                  <div
-                    key={idx}
-                    className="h-10 w-9 rounded-xl border-2 border-[#063254] bg-white flex items-center justify-center font-mono font-black text-base text-[#063254] shadow-sm"
-                  >
-                    {digit}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2 px-1">
-                <span>সার্ভার-জেনারেটেড ওটিপি: <strong className="text-[#063254] font-mono">{challengeOtp || '841920'}</strong></span>
-                <span>মেয়াদ: <strong className="text-amber-700">৫ মিনিট</strong></span>
-              </div>
-            </div>
+            {!otpVerified ? (
+              <div className="space-y-2 py-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={enteredOtp}
+                  onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="৬ ডিজিটের ওটিপি লিখুন"
+                  className="w-full text-center tracking-widest font-mono text-xl font-black py-2.5 px-4 rounded-xl border-2 border-[#063254] bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                />
 
-            {otpVerified ? (
+                {challengeOtp && (
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 bg-amber-50/80 p-2 rounded-xl border border-amber-200">
+                    <span>প্রাপ্ত এসএমএস কোড: <strong className="font-mono text-[#063254]">{challengeOtp}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => setEnteredOtp(challengeOtp)}
+                      className="text-amber-800 font-bold hover:underline cursor-pointer"
+                    >
+                      অটো-ফিল করুন
+                    </button>
+                  </div>
+                )}
+
+                {otpError && (
+                  <div className="text-xs text-red-600 font-bold bg-red-50 p-2 rounded-xl border border-red-200">
+                    {otpError}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => on2FAVerify(enteredOtp)}
+                  disabled={verifyingOtp || enteredOtp.length < 4}
+                  className={`w-full py-3 rounded-2xl text-white font-bold text-xs tracking-wide shadow-md active:scale-95 transition flex items-center justify-center gap-2 ${
+                    verifyingOtp || enteredOtp.length < 4
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      : 'bg-amber-500 hover:bg-amber-600 cursor-pointer'
+                  }`}
+                >
+                  {verifyingOtp ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      <span>সার্ভারে ওটিপি যাচাই হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <span>ওটিপি যাচাই করুন (Verify OTP)</span>
+                  )}
+                </button>
+              </div>
+            ) : (
               <div className="space-y-3">
                 <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-300 text-emerald-700 text-xs font-bold flex items-center justify-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -294,22 +333,6 @@ function TransactionFeedbackModal({
                   হোমে ফিরে যান
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={on2FAVerify}
-                disabled={verifyingOtp}
-                className="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs tracking-wide shadow-md active:scale-95 transition cursor-pointer flex items-center justify-center gap-2"
-              >
-                {verifyingOtp ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>সার্ভারে ওটিপি যাচাই হচ্ছে...</span>
-                  </>
-                ) : (
-                  <span>যাচাই করুন ও সম্পন্ন করুন (Verify via API)</span>
-                )}
-              </button>
             )}
 
             <button
@@ -397,11 +420,34 @@ function TransactionFeedbackModal({
                   {recoveryToken ? recoveryToken.slice(0, 32) + '...' : 'UPAY-TOKEN-DISPATCHED'}
                 </div>
 
+                <div className="text-left space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600">নতুন ৪-ডিজিট পিন নির্ধারণ করুন:</label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={newRecoveryPin}
+                    onChange={(e) => setNewRecoveryPin(e.target.value.replace(/\D/g, ''))}
+                    placeholder="১২৩৪"
+                    className="w-full text-center tracking-widest font-mono text-base font-bold py-2 px-3 rounded-xl border border-slate-300 bg-white"
+                  />
+                </div>
+
+                {recoveryError && (
+                  <div className="text-xs text-red-600 font-bold bg-red-50 p-2 rounded-xl border border-red-200">
+                    {recoveryError}
+                  </div>
+                )}
+
                 <button
                   type="button"
-                  onClick={onSelfServiceRecovery}
-                  disabled={recovering}
-                  className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs tracking-wide shadow-md active:scale-95 transition cursor-pointer flex items-center justify-center gap-2"
+                  onClick={() => onSelfServiceRecovery(newRecoveryPin)}
+                  disabled={recovering || newRecoveryPin.length !== 4}
+                  className={`w-full py-3 rounded-2xl text-white font-bold text-xs tracking-wide shadow-md active:scale-95 transition flex items-center justify-center gap-2 ${
+                    recovering || newRecoveryPin.length !== 4
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                      : 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
+                  }`}
                 >
                   {recovering ? (
                     <>
@@ -490,13 +536,15 @@ export default function RiskIntelUpayDashboard() {
   const [lastAssessedAt, setLastAssessedAt] = useState<string>('');
   const [showBalance, setShowBalance] = useState<boolean>(false);
   const [referenceNote, setReferenceNote] = useState<string>('');
-  const [pin, setPin] = useState<string>('1234');
+  const [pin, setPin] = useState<string>('');
+  const [pinError, setPinError] = useState<string>('');
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
   // Authentication & Security State
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [securityStatus, setSecurityStatus] = useState<any>(null);
+  const [activeTransactionId, setActiveTransactionId] = useState<string>('');
   const [activeChallengeId, setActiveChallengeId] = useState<string>('');
   const [activeChallengeOtp, setActiveChallengeOtp] = useState<string>('');
   const [activeRecoveryToken, setActiveRecoveryToken] = useState<string>('');
@@ -506,13 +554,17 @@ export default function RiskIntelUpayDashboard() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [otpVerified, setOtpVerified] = useState<boolean>(false);
   const [verifyingOtp, setVerifyingOtp] = useState<boolean>(false);
+  const [otpError, setOtpError] = useState<string>('');
   const [recoveryMode, setRecoveryMode] = useState<boolean>(false);
   const [recovering, setRecovering] = useState<boolean>(false);
   const [recoverySuccess, setRecoverySuccess] = useState<boolean>(false);
+  const [recoveryError, setRecoveryError] = useState<string>('');
+  const [submittingTxn, setSubmittingTxn] = useState<boolean>(false);
 
   // Dynamic API configuration
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
   const API_ASSESS_URL = `${API_BASE}/api/v1/assess-risk`;
+  const API_TRANSACTIONS_URL = `${API_BASE}/api/v1/transactions/authorize`;
   const API_HEALTH_URL = `${API_BASE}/health`;
   const API_LOGIN_URL = `${API_BASE}/api/v1/auth/login`;
   const API_SECURITY_STATUS_URL = `${API_BASE}/api/v1/security/status`;
@@ -848,10 +900,6 @@ export default function RiskIntelUpayDashboard() {
             setOtpVerified(false);
             setRecoveryMode(false);
             setRecoverySuccess(false);
-
-            if (parsedResult.recommended_action === 'APPROVE') {
-              deductBalance(dataToAssess.txn_amount);
-            }
           }
           return;
         }
@@ -927,10 +975,6 @@ export default function RiskIntelUpayDashboard() {
         setOtpVerified(false);
         setRecoveryMode(false);
         setRecoverySuccess(false);
-
-        if (action === 'APPROVE') {
-          deductBalance(dataToAssess.txn_amount);
-        }
       }
     } finally {
       setLoading(false);
@@ -989,46 +1033,178 @@ export default function RiskIntelUpayDashboard() {
   const scoreClamped = Math.min(Math.max(rawScore, 0), 100);
   const strokeDashoffset = circumference - (scoreClamped / 100) * circumference;
 
-  // Real OTP Verification for 2FA Challenge via Backend API
-  const handleVerify2FAOtp = async () => {
-    setVerifyingOtp(true);
+  // Real End-to-End Financial Transaction Authorization
+  const handleAuthorizeTransaction = async () => {
+    setPinError('');
+    if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      setPinError('অনুগ্রহ করে ৪ সংখ্যার সঠিক গোপন পিন দিন।');
+      return;
+    }
+
+    setSubmittingTxn(true);
     let token = authToken;
     if (!token) token = await loginDemoUser();
 
-    if (activeChallengeId && token) {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/auth/2fa/verify`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            challenge_id: activeChallengeId,
-            code: activeChallengeOtp || '841920',
-          }),
+    if (!token) {
+      setPinError('অথেনটিকেশন ত্রুটি। অনুগ্রহ করে রিলোড দিন।');
+      setSubmittingTxn(false);
+      return;
+    }
+
+    const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+
+    try {
+      const res = await fetch(API_TRANSACTIONS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify({
+          txn_amount: formData.txn_amount,
+          pin: pin,
+          recipient: formData.is_cash_out === 1 ? '01888219000' : '01812345678',
+          hour_of_day: formData.hour_of_day,
+          device_change_count_30d: formData.device_change_count_30d,
+          velocity_last_1h: formData.velocity_last_1h,
+          agent_distance_km: formData.agent_distance_km,
+          failed_pin_attempts_24h: formData.failed_pin_attempts_24h,
+          is_cash_out: formData.is_cash_out,
+          reference_note: referenceNote || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 200) {
+        setResult({
+          risk_score: data.risk_score,
+          risk_level: data.risk_level,
+          recommended_action: data.policy,
+          key_risk_drivers: data.key_risk_drivers || [],
+          narrative: data.narrative || '',
+          inference_time_ms: 12.5,
+          correlation_id: data.transaction_id,
         });
-        if (res.ok) {
+
+        setActiveTransactionId(data.transaction_id);
+        setLastCorrelationId(data.transaction_id);
+        const assessedTime = new Date().toLocaleTimeString();
+        setLastAssessedAt(assessedTime);
+        setOtpVerified(false);
+        setRecoveryMode(false);
+        setRecoverySuccess(false);
+        setOtpError('');
+        setRecoveryError('');
+
+        if (data.status === 'AUTHORIZED') {
+          deductBalance(data.amount);
+          setShowModal(true);
+        } else if (data.status === 'STEP_UP_REQUIRED') {
+          setActiveChallengeId(data.challenge?.challenge_id || '');
+          setActiveChallengeOtp(data.challenge?.demo_otp || '');
+          setShowModal(true);
+        } else if (data.status === 'BLOCKED') {
+          setShowModal(true);
+          try {
+            const recRes = await fetch(`${API_BASE}/api/v1/recovery/request`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ account_identifier: 'demo_user' }),
+            });
+            if (recRes.ok) {
+              const recData = await recRes.json();
+              setActiveRecoveryToken(recData.demo_recovery_token || 'UPAY-RECOVERY-ACTIVE');
+            }
+          } catch {
+            setActiveRecoveryToken('UPAY-RECOVERY-TOKEN');
+          }
+        }
+      } else if (res.status === 401) {
+        setPinError(data.detail || 'ভুল ৪-সংখ্যার গোপন পিন নম্বর প্রদান করা হয়েছে।');
+      } else if (res.status === 429) {
+        setPinError('লেনদেনের মাত্রাতিরিক্ত অনুরোধ (Rate limit exceeded)। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন।');
+      } else {
+        setPinError(data.detail || 'লেনদেন প্রক্রিয়া সম্পন্ন করা যায়নি।');
+      }
+    } catch (e: any) {
+      console.error('Transaction authorization network error:', e);
+      setPinError('সার্ভারের সাথে সংযোগ বিচ্ছিন্ন। লেনদেন সম্পন্ন করা সম্ভব নয়।');
+    } finally {
+      setSubmittingTxn(false);
+    }
+  };
+
+  // Real OTP Verification for 2FA Challenge via Backend API
+  const handleVerify2FAOtp = async (codeToVerify?: string) => {
+    setVerifyingOtp(true);
+    setOtpError('');
+    let token = authToken;
+    if (!token) token = await loginDemoUser();
+
+    const code = (codeToVerify || '').trim();
+    if (!code || code.length < 4) {
+      setOtpError('অনুগ্রহ করে সঠিক ওটিপি কোড প্রবেশ করান।');
+      setVerifyingOtp(false);
+      return;
+    }
+
+    if (token) {
+      try {
+        let res;
+        if (activeTransactionId) {
+          res = await fetch(`${API_BASE}/api/v1/transactions/${activeTransactionId}/verify-step-up`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              challenge_id: activeChallengeId,
+              otp_code: code,
+            }),
+          });
+        } else {
+          res = await fetch(`${API_BASE}/api/v1/auth/2fa/verify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              challenge_id: activeChallengeId,
+              code: code,
+            }),
+          });
+        }
+
+        const data = await res.json();
+        if (res.ok && data.verified) {
           setVerifyingOtp(false);
           setOtpVerified(true);
           deductBalance(formData.txn_amount);
           return;
+        } else {
+          setVerifyingOtp(false);
+          setOtpError(data.detail || 'ওটিপি যাচাইকরণ ব্যর্থ হয়েছে। সঠিক ওটিপি দিন।');
+          return;
         }
       } catch (e) {
         console.error('2FA verification network error:', e);
+        setVerifyingOtp(false);
+        setOtpError('সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি।');
+        return;
       }
     }
-
-    setTimeout(() => {
-      setVerifyingOtp(false);
-      setOtpVerified(true);
-      deductBalance(formData.txn_amount);
-    }, 400);
+    setVerifyingOtp(false);
+    setOtpError('অথেনটিকেশন ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
   };
 
   // Real Self-Service Recovery Execution via Backend API
-  const handleExecuteRecovery = async () => {
+  const handleExecuteRecovery = async (newPinToSet: string = '1234') => {
     setRecovering(true);
+    setRecoveryError('');
     if (activeRecoveryToken) {
       try {
         const res = await fetch(`${API_BASE}/api/v1/recovery/verify`, {
@@ -1036,27 +1212,30 @@ export default function RiskIntelUpayDashboard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             recovery_token: activeRecoveryToken,
-            new_pin: '1234',
+            new_pin: newPinToSet,
           }),
         });
-        if (res.ok) {
+        const data = await res.json();
+        if (res.ok && data.success) {
           setRecovering(false);
           setRecoverySuccess(true);
           deductBalance(formData.txn_amount);
           setFormData((prev) => ({ ...prev, failed_pin_attempts_24h: 0 }));
           return;
+        } else {
+          setRecovering(false);
+          setRecoveryError(data.detail || 'রিকভারি টোকেন যাচাইকরণ ব্যর্থ হয়েছে।');
+          return;
         }
       } catch (e) {
         console.error('Recovery verify network error:', e);
+        setRecovering(false);
+        setRecoveryError('সার্ভারের সাথে যোগাযোগ করা যায়নি।');
+        return;
       }
     }
-
-    setTimeout(() => {
-      setRecovering(false);
-      setRecoverySuccess(true);
-      deductBalance(formData.txn_amount);
-      setFormData((prev) => ({ ...prev, failed_pin_attempts_24h: 0 }));
-    }, 500);
+    setRecovering(false);
+    setRecoveryError('কোনো সক্রিয় রিকভারি টোকেন পাওয়া যায়নি।');
   };
 
   return (
@@ -1526,19 +1705,29 @@ export default function RiskIntelUpayDashboard() {
                   <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500 font-bold">upay পিন নম্বর (৪ ডিজিট)</span>
-                      <span className="text-[10px] text-slate-400">ডেমো পিন: ১২৩৪</span>
+                      <span className="text-[10px] text-slate-400">৪ সংখ্যার গোপন পিন</span>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                       <input
                         type="password"
+                        inputMode="numeric"
                         maxLength={4}
                         value={pin}
-                        onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                        onChange={(e) => {
+                          setPin(e.target.value.replace(/\D/g, ''));
+                          if (pinError) setPinError('');
+                        }}
                         className="w-full pl-9 pr-3 py-1.5 text-sm font-black font-mono tracking-widest text-[#063254] bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#063254]"
                         placeholder="••••"
+                        autoComplete="off"
                       />
                     </div>
+                    {pinError && (
+                      <div className="text-[11px] font-bold text-red-600 bg-red-50 p-1.5 rounded-lg border border-red-200">
+                        {pinError}
+                      </div>
+                    )}
                   </div>
 
                   {/* Reference Note (Optional) */}
@@ -1557,18 +1746,18 @@ export default function RiskIntelUpayDashboard() {
                   <div className="pt-2 mt-auto">
                     <button
                       type="button"
-                      disabled={isSubmitDisabled}
-                      onClick={() => assessRisk(formData, true)}
+                      disabled={isSubmitDisabled || submittingTxn}
+                      onClick={handleAuthorizeTransaction}
                       className={`w-full py-3.5 rounded-2xl font-bold text-xs tracking-wide shadow-md flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer ${
-                        isSubmitDisabled
+                        isSubmitDisabled || submittingTxn
                           ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                           : 'bg-[#FFC800] hover:bg-[#F2BD00] text-[#063254]'
                       }`}
                     >
-                      {loading ? (
+                      {submittingTxn ? (
                         <>
                           <RefreshCw className="h-4 w-4 animate-spin text-[#063254]" />
-                          <span>যাচাই ও মূল্যায়ন হচ্ছে...</span>
+                          <span>সার্ভারে লেনদেন যাচাই হচ্ছে...</span>
                         </>
                       ) : (
                         <>
@@ -1615,9 +1804,11 @@ export default function RiskIntelUpayDashboard() {
                   onSelfServiceRecovery={handleExecuteRecovery}
                   verifyingOtp={verifyingOtp}
                   otpVerified={otpVerified}
+                  otpError={otpError}
                   recoveryMode={recoveryMode}
                   recovering={recovering}
                   recoverySuccess={recoverySuccess}
+                  recoveryError={recoveryError}
                   setRecoveryMode={setRecoveryMode}
                   challengeOtp={activeChallengeOtp}
                   recoveryToken={activeRecoveryToken}

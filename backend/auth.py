@@ -14,7 +14,7 @@ import json
 import logging
 import secrets
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from pydantic import BaseModel, Field
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -61,15 +61,17 @@ def verify_password(plain_password: str, hashed_value: str) -> bool:
 # ---------------------------------------------------------------------------
 # Synthetic Demo Accounts (Clearly marked for Hackathon Evaluation)
 # ---------------------------------------------------------------------------
-# Pre-computed PBKDF2 hashes for demo accounts
+# Pre-computed PBKDF2 hashes for demo accounts and 4-digit PINs
 SYNTHETIC_USERS: Dict[str, Dict[str, Any]] = {
     "demo_user": {
         "username": "demo_user",
         "user_id": "SYNTH-UPAY-USER-001",
         "full_name": "Rahim Ahmed (Synthetic Demo User)",
         "password_hash": hash_password("Upay@2026!", salt="demo_salt_user_001"),
+        "pin_hash": hash_password("1234", salt="demo_pin_salt_user_001"),
+        "phone": "+8801812345678",
         "role": "customer",
-        "scopes": ["assess_risk", "step_up_2fa", "recover_account"],
+        "scopes": ["assess_risk", "step_up_2fa", "recover_account", "transact"],
         "is_synthetic": True,
     },
     "compliance_officer": {
@@ -77,8 +79,10 @@ SYNTHETIC_USERS: Dict[str, Dict[str, Any]] = {
         "user_id": "SYNTH-UPAY-ANALYST-101",
         "full_name": "Farhana Sultana (Compliance Analyst)",
         "password_hash": hash_password("Analyst@2026!", salt="demo_salt_analyst_101"),
+        "pin_hash": hash_password("5678", salt="demo_pin_salt_analyst_101"),
+        "phone": "+8801898765432",
         "role": "analyst",
-        "scopes": ["assess_risk", "step_up_2fa", "view_audit_logs"],
+        "scopes": ["assess_risk", "step_up_2fa", "view_audit_logs", "transact"],
         "is_synthetic": True,
     },
     "security_admin": {
@@ -86,11 +90,56 @@ SYNTHETIC_USERS: Dict[str, Dict[str, Any]] = {
         "user_id": "SYNTH-UPAY-ADMIN-999",
         "full_name": "Tariq Hasan (Chief Information Security Officer)",
         "password_hash": hash_password("Admin@2026!", salt="demo_salt_admin_999"),
+        "pin_hash": hash_password("9999", salt="demo_pin_salt_admin_999"),
+        "phone": "+8801800000000",
         "role": "admin",
-        "scopes": ["assess_risk", "step_up_2fa", "view_audit_logs", "manage_security"],
+        "scopes": ["assess_risk", "step_up_2fa", "view_audit_logs", "manage_security", "transact"],
         "is_synthetic": True,
     },
 }
+
+
+def validate_pin_format(pin: Optional[str]) -> Tuple[bool, str]:
+    """Validates that a PIN is non-empty, exactly 4 digits, and numeric."""
+    if not pin:
+        return False, "PIN is required and cannot be empty."
+    if len(pin) != 4:
+        return False, "PIN must be exactly 4 digits."
+    if not pin.isdigit():
+        return False, "PIN must contain only numeric digits (0-9)."
+    return True, "Valid PIN format."
+
+
+def verify_user_pin(user_id_or_username: str, plain_pin: str) -> bool:
+    """Verifies a user's 4-digit PIN against the server-side PBKDF2 hash."""
+    is_valid_format, _ = validate_pin_format(plain_pin)
+    if not is_valid_format:
+        return False
+
+    target_user = None
+    for u in SYNTHETIC_USERS.values():
+        if u["user_id"] == user_id_or_username or u["username"] == user_id_or_username:
+            target_user = u
+            break
+
+    if not target_user or "pin_hash" not in target_user:
+        return False
+
+    return verify_password(plain_pin, target_user["pin_hash"])
+
+
+def update_user_pin(user_id_or_username: str, new_pin: str) -> bool:
+    """Safely updates a user's hashed PIN in server state."""
+    is_valid_format, _ = validate_pin_format(new_pin)
+    if not is_valid_format:
+        return False
+
+    for u in SYNTHETIC_USERS.values():
+        if u["user_id"] == user_id_or_username or u["username"] == user_id_or_username:
+            salt = secrets.token_hex(16)
+            u["pin_hash"] = hash_password(new_pin, salt=salt)
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------
