@@ -1,9 +1,9 @@
 # RiskIntel upay — Trust & Risk Intelligence Engine
 
-[![Track](https://img.shields.io/badge/Track%2001-Trust%20%26%20Risk%20Intelligence-FFC800?style=for-the-badge&labelColor=063254)](https://github.com/si4795/riskintel-upay)
-[![Hackathon](https://img.shields.io/badge/UCB%20Fintech%20Ltd.-AI%20DEV%20FEST%202026-063254?style=for-the-badge&labelColor=FFC800)](https://github.com/si4795/riskintel-upay)
+[![Track](https://img.shields.io/badge/Track%2001-Trust%20%26%20Risk%20Intelligence-FFC800?style=for-the-badge&labelColor=063254)](https://github.com/mdsayadulislam/riskintel-upay)
+[![Hackathon](https://img.shields.io/badge/UCB%20Fintech%20Ltd.-AI%20DEV%20FEST%202026-063254?style=for-the-badge&labelColor=FFC800)](https://github.com/mdsayadulislam/riskintel-upay)
 [![Security Status](https://img.shields.io/badge/Production%20Security-Hardened%20%26%20Tested-10B981?style=for-the-badge&labelColor=063254)](JUDGE_FEEDBACK_RESPONSE.md)
-[![Inference Latency](https://img.shields.io/badge/Inference%20Latency-sub--15ms-10B981?style=for-the-badge&labelColor=063254)](https://github.com/si4795/riskintel-upay)
+[![Inference Latency](https://img.shields.io/badge/Inference%20Latency-sub--15ms-10B981?style=for-the-badge&labelColor=063254)](https://github.com/mdsayadulislam/riskintel-upay)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&labelColor=063254)](LICENSE)
 
 > **Official Submission for AI DEV FEST 2026 — Track 01: Trust & Risk Intelligence**  
@@ -186,7 +186,7 @@ _For full scientific analysis, see [`MODEL_VALIDATION_REPORT.md`](MODEL_VALIDATI
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/si4795/riskintel-upay.git
+git clone https://github.com/mdsayadulislam/riskintel-upay.git
 cd riskintel-upay
 ```
 

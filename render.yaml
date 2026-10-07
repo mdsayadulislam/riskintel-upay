@@ -1,0 +1,30 @@
+services:
+  # RiskIntel upay - FastAPI Fraud Engine Gateway
+  - type: web
+    name: riskintel-upay-api
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python backend/train_pipeline.py"
+    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: "/api/v1/health"
+    envVars:
+      - key: RISKINTEL_ENV
+        value: production
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: ALLOWED_ORIGINS
+        value: "https://riskintel-upay.vercel.app,http://localhost:3000"
+      - key: DATABASE_PATH
+        value: "data/riskintel_audit.db"
+      - key: RATE_LIMIT_ASSESS_PER_MIN
+        value: "60"
+      - key: RATE_LIMIT_AUTH_PER_MIN
+        value: "10"
+      - key: TWO_FACTOR_EXPIRY_SECONDS
+        value: "300"
+      - key: RECOVERY_TOKEN_EXPIRY_SECONDS
+        value: "900"

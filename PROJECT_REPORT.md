@@ -44,7 +44,7 @@ The platform bridges cutting-edge machine learning (**LightGBM decision forests*
   3. **Md. Elias Ahmed** — Frontend UX Engineer & QA Specialist
 
 ### 1.3 Deployment Links & Artifacts
-- **GitHub Repository:** [https://github.com/si4795/riskintel-upay](https://github.com/si4795/riskintel-upay)
+- **GitHub Repository:** [https://github.com/mdsayadulislam/riskintel-upay](https://github.com/mdsayadulislam/riskintel-upay)
 - **Interactive Web Simulator (Vercel):** [https://riskintel-upay.vercel.app](https://riskintel-upay.vercel.app)
 - **FastAPI Backend & Swagger Docs (Render):** [https://riskintel-upay.onrender.com/docs](https://riskintel-upay.onrender.com/docs)
 - **License:** MIT Open Source License
@@ -370,7 +370,7 @@ When a transaction is submitted or a preset is evaluated, the handset dynamicall
 ### 11.2 Local Setup
 ```bash
 # 1. Clone the repository
-git clone https://github.com/si4795/riskintel-upay.git
+git clone https://github.com/mdsayadulislam/riskintel-upay.git
 cd riskintel-upay
 
 # 2. Setup Python environment and install dependencies
@@ -426,4 +426,4 @@ npm run dev
 ---
 
 > **Report Maintained By:** Team Loading_211  
-> **Contact:** [GitHub Repository Issues](https://github.com/si4795/riskintel-upay/issues)
+> **Contact:** [GitHub Repository Issues](https://github.com/mdsayadulislam/riskintel-upay/issues)

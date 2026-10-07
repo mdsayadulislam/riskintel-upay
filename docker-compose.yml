@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: riskintel-upay-api
+    ports:
+      - "8000:8000"
+    environment:
+      - RISKINTEL_ENV=production
+      - JWT_SECRET_KEY=dev_hackathon_super_secret_key_riskintel_2026_change_in_prod
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://riskintel-upay.vercel.app
+      - DATABASE_PATH=data/riskintel_audit.db
+    volumes:
+      - ./data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: riskintel-upay-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
