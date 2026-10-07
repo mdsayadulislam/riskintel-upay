@@ -269,6 +269,6 @@ Copy `.env.example` in `backend/` to `.env` and configure:
 - **Event:** AI DEV FEST 2026
 - **Members:**
   1. **Md. Suaib Islam** ([@si4795](https://github.com/si4795)) — Lead Full-Stack Architect & Security Engineer
-  2. **Md. Sayadul Islam** — Machine Learning Researcher & Data Modeler
+  2. **Md. Sayadul Islam** ([@mdsayadulislam](https://github.com/mdsayadulislam)) — Machine Learning Researcher & Data Modeler
   3. **Md. Elias Ahmed** — Frontend UX Engineer & QA Specialist
 - **License:** MIT Open Source License

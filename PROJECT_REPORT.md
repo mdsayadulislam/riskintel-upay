@@ -40,7 +40,7 @@ The platform bridges cutting-edge machine learning (**LightGBM decision forests*
 - **Event:** AI DEV FEST 2026
 - **Members:**
   1. **Md. Suaib Islam** ([@si4795](https://github.com/si4795)) — Lead Full-Stack Architect & AI Engineer
-  2. **Md. Sayadul Islam** — Machine Learning Researcher & Data Modeler
+  2. **Md. Sayadul Islam** ([@mdsayadulislam](https://github.com/mdsayadulislam)) — Machine Learning Researcher & Data Modeler
   3. **Md. Elias Ahmed** — Frontend UX Engineer & QA Specialist
 
 ### 1.3 Deployment Links & Artifacts
