@@ -8,3 +8,7 @@ backend/__pycache__/
 *.pyc
 *.tsbuildinfo
 .DS_Store
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
